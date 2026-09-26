@@ -28,13 +28,13 @@ function TopCamera() {
 export function Stage() {
   return (
     <Canvas dpr={[1, 2]} camera={{ fov: 28 }} gl={{ antialias: false }}>
-      <color attach="background" args={['#1b1c1f']} />
+      <color attach="background" args={['#d2d3d6']} />
       <directionalLight position={[-3, 10, 6]} intensity={0.5} />
       <Suspense fallback={null}>
         <Environment files="/hdri/studio.exr" environmentIntensity={0.3} />
         <Pulse16 />
       </Suspense>
-      <ContactShadows position={[0, 0, 0]} opacity={0.65} scale={16} blur={2.4} far={2} />
+      <ContactShadows position={[0, 0, 0]} opacity={0.45} scale={16} blur={2.6} far={2} />
       <TopCamera />
       <EffectComposer multisampling={4}>
         <Bloom mipmapBlur luminanceThreshold={1.5} intensity={0.7} />
