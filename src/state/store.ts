@@ -1,97 +1,66 @@
 import { create } from 'zustand';
 
-export type OscType = 'sine' | 'triangle' | 'square' | 'sawtooth';
-
-export interface SynthParams {
-  osc: OscType;
-  attack: number; // s
-  decay: number; // s
-  sustain: number; // 0..1
-  release: number; // s
-  cutoff: number; // Hz
-  resonance: number; // Q
-  delay: number; // wet 0..1
-  reverb: number; // wet 0..1
-  volume: number; // dB
-}
-
-export const DRUMS = ['kick', 'snare', 'hat', 'clap', 'tom', 'perc'] as const;
+export const DRUMS = ['kick', 'snare', 'hat', 'clap', 'tom', 'perc'] as const; // engine voices
 export type Drum = (typeof DRUMS)[number];
-
+export const TRACKS = ['kick', 'snare', 'hat', 'clap', 'notes'] as const; // PULSE-16 BASIC track pads
+export type Track = (typeof TRACKS)[number];
 export const STEPS = 16;
-// Melody grid rows, top to bottom (one octave + top C). Octave offset is applied at playback.
-export const MELODY_ROWS = ['C+', 'B', 'A#', 'A', 'G#', 'G', 'F#', 'F', 'E', 'D#', 'D', 'C#', 'C'] as const;
 
 export type Grid = boolean[][];
+export const emptyGrid = (rows: number): Grid => Array.from({ length: rows }, () => Array<boolean>(STEPS).fill(false));
+export const emptyNotes = (): string[][] => Array.from({ length: STEPS }, () => []);
 
-export const emptyGrid = (rows: number): Grid =>
-  Array.from({ length: rows }, () => Array<boolean>(STEPS).fill(false));
+export type MacroKey = 'speed' | 'volume' | 'tone' | 'length' | 'echo' | 'space';
+export type Macros = Record<MacroKey, number>; // all 0..1
 
-export const rowToNote = (row: number, octave: number): string => {
-  const name = MELODY_ROWS[row];
-  return name === 'C+' ? `C${octave + 1}` : `${name}${octave}`;
-};
+export const bpmOf = (speed: number) => Math.round(60 + speed * 120);
 
 export interface PlaygroundState {
-  params: SynthParams;
-  melody: Grid;
+  soundIndex: number;
+  macros: Macros;
   drums: Grid;
-  seqOctave: number;
-  bpm: number;
-  swing: number;
+  notes: string[][]; // melody: notes per step
+  selectedTrack: Track;
+  cursor: number; // NOTES step being written (-1 = none)
   playing: boolean;
   currentStep: number;
   keyOctave: number;
   pressed: string[];
+  lastNote: string;
   padHits: Record<Drum, number>;
+  flashes: Record<string, number>; // control name -> last press time (keyboard-triggered press animation)
+  popup: { label: string; value: number; until: number } | null;
+  showKeys: boolean;
+  showHelp: boolean;
   audioReady: boolean;
-  showLabels: boolean;
-  setParam: <K extends keyof SynthParams>(k: K, v: SynthParams[K]) => void;
-  setParams: (p: SynthParams) => void;
-  toggleMelody: (row: number, step: number) => void;
-  toggleDrum: (row: number, step: number) => void;
   set: (partial: Partial<PlaygroundState>) => void;
-  press: (note: string) => void;
-  release: (note: string) => void;
-  hitPad: (d: Drum) => void;
 }
 
-const toggle = (g: Grid, r: number, s: number): Grid =>
-  g.map((row, i) => (i === r ? row.map((v, j) => (j === s ? !v : v)) : row));
-
-export const DEFAULT_PARAMS: SynthParams = {
-  osc: 'sawtooth',
-  attack: 0.01,
-  decay: 0.2,
-  sustain: 0.4,
-  release: 0.4,
-  cutoff: 2200,
-  resonance: 3,
-  delay: 0.2,
-  reverb: 0.25,
-  volume: -8,
+const storedShowKeys = () => {
+  try {
+    return localStorage.getItem('pulse16.showKeys') !== '0';
+  } catch {
+    return true;
+  }
 };
 
 export const useStore = create<PlaygroundState>((set) => ({
-  params: DEFAULT_PARAMS,
-  melody: emptyGrid(MELODY_ROWS.length),
+  soundIndex: 0,
+  macros: { speed: 0.43, volume: 0.75, tone: 0.45, length: 0.3, echo: 0.15, space: 0.2 },
   drums: emptyGrid(DRUMS.length),
-  seqOctave: 4,
-  bpm: 110,
-  swing: 0,
+  notes: emptyNotes(),
+  selectedTrack: 'kick',
+  cursor: -1,
   playing: false,
   currentStep: -1,
-  keyOctave: 4,
+  keyOctave: 3,
   pressed: [],
+  lastNote: '--',
   padHits: { kick: 0, snare: 0, hat: 0, clap: 0, tom: 0, perc: 0 },
+  flashes: {},
+  popup: null,
+  showKeys: storedShowKeys(),
+  showHelp: false,
   audioReady: false,
-  showLabels: false,
-  setParam: (k, v) => set((s) => ({ params: { ...s.params, [k]: v } })),
-  setParams: (params) => set({ params }),
-  toggleMelody: (r, st) => set((s) => ({ melody: toggle(s.melody, r, st) })),
-  toggleDrum: (r, st) => set((s) => ({ drums: toggle(s.drums, r, st) })),
   set: (partial) => set(partial),
-  press: (note) => set((s) => (s.pressed.includes(note) ? s : { pressed: [...s.pressed, note] })),
-  release: (note) => set((s) => ({ pressed: s.pressed.filter((n) => n !== note) })),
-  hitPad: (d) => set((s) => ({ padHits: { ...s.padHits, [d]: performance.now() } })),
 }));

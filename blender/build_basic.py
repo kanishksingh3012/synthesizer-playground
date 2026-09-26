@@ -33,7 +33,7 @@ def callout(title, job, pos):
 
 def keycap(label, x, y, z, m, ink='ink'):
     """Keyboard-shortcut hint printed flat on the control, same style as the letters on the piano keys."""
-    c.text(label, (x, y, z + 0.001), 0.12, m[ink], font=c.FONT_BOLD)
+    c.text(label, (x, y, z + 0.001), 0.12, m[ink], font=c.FONT_BOLD).name = f'hint_{label}'
 
 
 def check_bounds():
@@ -170,9 +170,9 @@ def build():
         if not sharp:
             white_i += 1
         if sharp:
-            c.text(ch, (x0 + (white_i + 1) * white_w, -1.95, WELL + 0.232), 0.1, m['ink_w'], font=c.FONT_BOLD)
+            c.text(ch, (x0 + (white_i + 1) * white_w, -1.95, WELL + 0.232), 0.1, m['ink_w'], font=c.FONT_BOLD).name = f'hint_{ch}'
         else:
-            c.text(ch, (x0 + white_i * white_w + white_w / 2, -2.24, WELL + 0.141 - (0.04 if i == 0 else 0)), 0.12, m['ink'], font=c.FONT_BOLD)
+            c.text(ch, (x0 + white_i * white_w + white_w / 2, -2.24, WELL + 0.141 - (0.04 if i == 0 else 0)), 0.12, m['ink'], font=c.FONT_BOLD).name = f'hint_{ch}'
     place('keys', 'well', (zone0 + zone1) / 2, -1.95, 8 * white_w, 0.82)
     callout('KEYS', 'play notes; on NOTES, write them into steps', ((zone0 + zone1) / 2, -2.1, WELL + 0.15))
 
@@ -191,9 +191,30 @@ def save_callouts(cam, path):
         json.dump(out, f, indent=1)
 
 
+def export_glb(path):
+    """Web export: text -> meshes, no floor/lights/cameras, screen gets a plain material (the app draws it live)."""
+    dg = bpy.context.evaluated_depsgraph_get()
+    for o in [o for o in bpy.data.objects if o.type == 'FONT']:
+        name, mw = o.name, o.matrix_world.copy()
+        me = bpy.data.meshes.new_from_object(o.evaluated_get(dg))
+        bpy.data.objects.remove(o)
+        mo = bpy.data.objects.new(name, me)
+        mo.matrix_world = mw
+        bpy.context.scene.collection.objects.link(mo)
+    for o in [o for o in bpy.data.objects if o.name == 'floor' or o.type in ('LIGHT', 'CAMERA')]:
+        bpy.data.objects.remove(o)
+    bpy.data.objects['screen'].data.materials[0] = c.ink('screen_blank', (0.01, 0.0, 0.0), 0.2)
+    bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', export_apply=True, export_cameras=False,
+                              export_lights=False, export_yup=True)
+    print('exported', path, flush=True)
+
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
     top, hero = build()
+    if os.environ.get('EXPORT'):
+        export_glb(os.environ['EXPORT'])
+        sys.exit(0)
     views = os.environ.get('VIEWS', 'top,hero').split(',')
     save_callouts(top, os.path.join(OUT, 'basic_callouts.json'))
     if 'top' in views:
