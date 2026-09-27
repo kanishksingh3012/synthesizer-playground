@@ -1,7 +1,7 @@
 """Web export with baked lighting: Cycles bakes the studio lighting, shadows and procedural materials of
-PULSE-16 BASIC into one texture atlas, so the browser shows the same look as the renders.
+HEX-16 into one texture atlas, so the browser shows the same look as the renders.
 
-  BAKE=public/models/pulse16-basic.glb [BAKE_RES=4096] [BAKE_SPP=128] python blender/bake_basic.py <outdir>
+  BAKE=raw.glb [BAKE_RES=4096] [BAKE_SPP=40] python blender/bake_hex16.py <outdir>
 
 Parts that change at runtime (screen, LEDs, pad rims) keep plain materials; the app drives them live.
 """
@@ -13,7 +13,7 @@ import bpy
 import bmesh  # noqa: E402  (only importable once bpy is loaded)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import build_basic as bb  # noqa: E402
+import build_hex16 as bb  # noqa: E402
 
 RES = int(os.environ.get('BAKE_RES', 4096))
 SPP = int(os.environ.get('BAKE_SPP', 128))
@@ -125,7 +125,7 @@ def main():
     hints = [o for o in targets if o.name.startswith('hint_')]
     prepare(targets)
 
-    img = bpy.data.images.new('pulse16_bake', RES, RES, float_buffer=True)
+    img = bpy.data.images.new('hex16_bake', RES, RES, float_buffer=True)
     # hints can be switched off in the app, so nothing may shadow the caps under them
     for h in hints:
         h.hide_render = True
@@ -137,7 +137,7 @@ def main():
     # save through the render's view transform (AgX look + exposure) = the exact colours of the renders
     s.render.image_settings.file_format = 'PNG'
     s.render.image_settings.color_depth = '8'
-    png = os.path.join(out, 'pulse16_bake.png')
+    png = os.path.join(out, 'hex16_bake.png')
     img.save_render(png, scene=s)
     print('baked', png, flush=True)
 

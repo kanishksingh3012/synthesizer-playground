@@ -1,4 +1,4 @@
-"""HEX-16 (formerly PULSE-16 BASIC) — layout A "workbench rows": controls ordered by how often you touch them
+"""HEX-16 — layout A "workbench rows": controls ordered by how often you touch them
 (sound settings at the back, track pads directly above the steps, PLAY + keys under your hands)."""
 import json
 import os
@@ -91,7 +91,7 @@ def build():
     c.text('PLAYGROUND ELECTRONICS', (3.05, 2.19, z), 0.09, m['ink'], align='RIGHT', spacing=1.5)
 
     # --- back row 1: screen | SPEED, VOLUME ------------------------------------------
-    disp = os.path.join(OUT, 'basic_matrix.png')
+    disp = os.path.join(OUT, 'hex16_matrix.png')
     screens.matrix(disp, 'KICK', 'BASS', 112, 4, 'C4', SELECTED_STEPS, PLAYHEAD)
     sx, sy = -1.35, 1.55
     c.box('screen_bezel', (3.62, 0.92, 0.03), (sx, sy, TOP), m['bezel'], bev=0.02)
@@ -218,8 +218,8 @@ if __name__ == '__main__':
         export_glb(os.environ['EXPORT'])
         sys.exit(0)
     views = os.environ.get('VIEWS', 'top,hero').split(',')
-    save_callouts(top, os.path.join(OUT, 'basic_callouts.json'))
+    save_callouts(top, os.path.join(OUT, 'hex16_callouts.json'))
     if 'top' in views:
-        c.render(top, os.path.join(OUT, 'basic_top.png'))
+        c.render(top, os.path.join(OUT, 'hex16_top.png'))
     if 'hero' in views:
-        c.render(hero, os.path.join(OUT, 'basic_hero.png'))
+        c.render(hero, os.path.join(OUT, 'hex16_hero.png'))

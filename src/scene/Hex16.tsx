@@ -8,7 +8,7 @@ import { createScreen } from './screenTexture';
 import { detentsOf } from '../audio/sounds';
 import { Spring, reducedMotion } from './spring';
 
-const MODEL = '/models/pulse16-basic.glb';
+const MODEL = '/models/hex16.glb';
 const CONTROL = /^(key_\d+|step_\d+|track_(kick|snare|hat|clap|notes)|btn_(play|sound|clear|oct0|oct1)|knob_(speed|volume|pitch|tone|length|echo|space))$/;
 const TRAVEL = 0.03; // press depth (model units)
 const HOVER_LIFT = 0.006;
@@ -19,8 +19,8 @@ const controlOf = (o: THREE.Object3D | null): THREE.Object3D | null => {
 };
 const knobAngle = (v: number) => (0.75 - v * 1.5) * Math.PI;
 
-/** The HEX-16 model (file names keep its first name, PULSE-16) (exported from blender/build_basic.py), wired to the controller by node name. */
-export function Pulse16() {
+/** The HEX-16 model (baked by blender/bake_hex16.py), wired to the controller by node name. */
+export function Hex16() {
   const { scene } = useGLTF(MODEL);
   const maxAnisotropy = useThree((st) => st.gl.capabilities.getMaxAnisotropy());
   // Setup mutates the shared glTF scene, so it runs once per scene (StrictMode double-invokes memos).
