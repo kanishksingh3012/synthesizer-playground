@@ -8,7 +8,7 @@ import { createScreen } from './screenTexture';
 import { detentsOf } from '../audio/sounds';
 import { Spring, reducedMotion } from './spring';
 
-const MODEL = '/models/hex16.glb';
+export const MODEL = '/models/hex16.glb';
 const CONTROL = /^(key_\d+|step_\d+|track_(kick|snare|hat|clap|notes)|btn_(play|sound|clear|oct0|oct1)|knob_(speed|volume|pitch|tone|length|echo|space))$/;
 const TRAVEL = 0.03; // press depth (model units)
 const HOVER_LIFT = 0.006;

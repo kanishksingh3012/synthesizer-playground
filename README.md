@@ -8,6 +8,10 @@ Browser synth playground: play a 3D synth (HEX-16), sequence a beat + melody, ex
 - `blender/` — procedural Blender (bpy 5.0) models + Cycles renders. `build_hex16.py` = the HEX-16 design. HDRIs in `blender/assets` are CC0 (via `@pmndrs/assets`).
 - `docs/design/` — current design renders.
 
+## Tutorial
+The **Tutorial** button in the top bar opens a 19-lesson beginner course next to the synth (5 parts: Meet HEX-16, Rhythm, Melody, Sound, Go further).
+Content and diagrams: `src/tutorial/lessons.tsx` + `src/tutorial/diagrams.tsx`; what counts as done and what "Show me" does: `src/tutorial/tasks.ts`; panel: `src/ui/Tutorial.tsx`; highlight rings on the synth: `src/scene/Highlights.tsx`.
+
 ## Run
 ```
 npm install && npm run dev
@@ -18,3 +22,13 @@ npm install && npm run dev
 python -m venv .venv && .venv/bin/pip install bpy==5.0.1 numpy pillow
 SYNTH_ASSETS=blender/assets .venv/bin/python blender/build_hex16.py renders   # SPP=16 RES_PCT=40 for a quick test
 ```
+
+## Link-preview cards
+Three designs in `public/previews/`: **A** split (`hex16-a.jpg`), **B** centred (`hex16-b.jpg`, the live one), **C** sequencer (`hex16-c.jpg`).
+To switch, change `og:image` / `twitter:image` in `index.html`. Regenerate: `python scripts/preview_cards.py` (Pillow + `npm install` for the Inter font);
+the transparent source renders in `docs/brand/` come from `SPP=96 python blender/render_card.py docs/brand`.
+
+## Checks (Playwright, Chromium)
+- `node scripts/qa.cjs <out-dir> [url]` — production smoke test against `vite preview` (render, export, share links, phone gate).
+- `node scripts/sound-probe.cjs` and `node scripts/click-levels.cjs` — audio levels against the dev server (`npx vite --port 5174`).
+- `npx tsx --tsconfig tsconfig.app.json scripts/tutorial-preview.tsx tutorial-preview.html` — the tutorial as one review page.

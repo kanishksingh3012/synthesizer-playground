@@ -13,6 +13,8 @@ export const emptyNotes = (): string[][] => Array.from({ length: STEPS }, () => 
 export type MacroKey = 'speed' | 'volume' | 'pitch' | 'tone' | 'length' | 'echo' | 'space';
 export type Macros = Record<MacroKey, number>; // all 0..1
 
+export const DEFAULT_MACROS: Macros = { speed: 0.43, volume: 0.75, pitch: 0.5, tone: 0.5, length: 0.3, echo: 0.12, space: 0.2 };
+
 export const bpmOf = (speed: number) => Math.round(60 + speed * 120);
 
 export interface PlaygroundState {
@@ -34,6 +36,10 @@ export interface PlaygroundState {
   uiSound: boolean; // mechanical click sounds on/off
   showHelp: boolean;
   audioReady: boolean;
+  tutorialOpen: boolean;
+  tutorialStep: number;
+  highlight: string[]; // synth parts the tutorial is pointing at (node names)
+  beforeTutorial: Pick<PlaygroundState, 'drums' | 'notes' | 'soundIndex' | 'macros' | 'keyOctave'> | null;
   set: (partial: Partial<PlaygroundState>) => void;
 }
 
@@ -47,7 +53,7 @@ const storedFlag = (key: string) => {
 
 export const useStore = create<PlaygroundState>((set) => ({
   soundIndex: 0,
-  macros: { speed: 0.43, volume: 0.75, pitch: 0.5, tone: 0.5, length: 0.3, echo: 0.12, space: 0.2 },
+  macros: DEFAULT_MACROS,
   drums: emptyGrid(DRUMS.length),
   notes: emptyNotes(),
   selectedTrack: 'kick',
@@ -64,5 +70,9 @@ export const useStore = create<PlaygroundState>((set) => ({
   uiSound: storedFlag('hex16.uiSound'),
   showHelp: false,
   audioReady: false,
+  tutorialOpen: false,
+  tutorialStep: 0,
+  highlight: [],
+  beforeTutorial: null,
   set: (partial) => set(partial),
 }));

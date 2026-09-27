@@ -16,13 +16,14 @@ interface Voice {
 let voices: Record<UiSound, Voice> | null = null;
 let lastTick = 0;
 
+// Levels measured on the output: clicks peak ~6–10 dB under a kick hit (softer key-up and detent tick).
 const SPEC: Record<UiSound, { type: BiquadFilterType; freq: number; decay: number; db: number; body?: number }> = {
-  keyDown: { type: 'bandpass', freq: 2600, decay: 0.014, db: -24, body: 140 }, // plastic key clack
-  keyUp: { type: 'bandpass', freq: 3600, decay: 0.008, db: -32 }, // softer return
-  button: { type: 'lowpass', freq: 900, decay: 0.03, db: -20, body: 190 }, // rubber thock
-  step: { type: 'bandpass', freq: 1900, decay: 0.012, db: -24 },
-  latch: { type: 'bandpass', freq: 1500, decay: 0.02, db: -20, body: 110 }, // PLAY latch (2 clicks)
-  tick: { type: 'highpass', freq: 4200, decay: 0.004, db: -30 }, // knob detent
+  keyDown: { type: 'bandpass', freq: 2600, decay: 0.014, db: -7, body: 140 }, // plastic key clack
+  keyUp: { type: 'bandpass', freq: 3600, decay: 0.008, db: -9 }, // softer return
+  button: { type: 'lowpass', freq: 900, decay: 0.03, db: -8, body: 190 }, // rubber thock
+  step: { type: 'bandpass', freq: 1900, decay: 0.012, db: 0 },
+  latch: { type: 'bandpass', freq: 1500, decay: 0.02, db: -8, body: 110 }, // PLAY latch (2 clicks)
+  tick: { type: 'highpass', freq: 4200, decay: 0.004, db: -13 }, // knob detent
 };
 
 function build(): Record<UiSound, Voice> {
