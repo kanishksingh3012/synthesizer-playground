@@ -3,12 +3,14 @@ import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { DRUMS, TRACKS, useStore, type MacroKey, type Track } from '../state/store';
-import { clearTrack, keyNote, nextSound, pressKey, releaseNote, setMacro, shiftOctave, tapStep, tapTrack, togglePlay } from '../controller';
+import { DETENTS, clearTrack, keyNote, nextSound, pressKey, releaseNote, setMacro, shiftOctave, tapStep, tapTrack, togglePlay } from '../controller';
 import { createScreen } from './screenTexture';
+import { Spring, reducedMotion } from './spring';
 
 const MODEL = '/models/pulse16-basic.glb';
 const CONTROL = /^(key_\d+|step_\d+|track_(kick|snare|hat|clap|notes)|btn_(play|sound|clear|oct0|oct1)|knob_(speed|volume|tone|length|echo|space))$/;
 const TRAVEL = 0.03; // press depth (model units)
+const HOVER_LIFT = 0.006;
 
 const controlOf = (o: THREE.Object3D | null): THREE.Object3D | null => {
   for (let n = o; n; n = n.parent) if (CONTROL.test(n.name)) return n;
@@ -27,18 +29,18 @@ export function Pulse16() {
 
   function setup() {
     const screen = createScreen();
-    const movers: { obj: THREE.Object3D; y0: number }[] = [];
+    const movers: { obj: THREE.Object3D; y0: number; spring: Spring }[] = [];
     const keys: THREE.Object3D[] = [];
     const leds: THREE.MeshStandardMaterial[] = [];
-    const knobs: Partial<Record<MacroKey, THREE.Object3D>> = {};
+    const knobs: Partial<Record<MacroKey, { obj: THREE.Object3D; spring: Spring }>> = {};
     const rims: Partial<Record<Track, THREE.MeshStandardMaterial>> = {};
     const hints: THREE.Object3D[] = [];
     scene.traverse((o) => {
       const mesh = o as THREE.Mesh;
       let m: RegExpExecArray | null;
-      if (CONTROL.test(o.name) && !o.name.startsWith('knob_')) movers.push({ obj: o, y0: o.position.y });
+      if (CONTROL.test(o.name) && !o.name.startsWith('knob_')) movers.push({ obj: o, y0: o.position.y, spring: new Spring(0) });
       if ((m = /^key_(\d+)$/.exec(o.name))) keys[+m[1]] = o;
-      if ((m = /^knob_(\w+)$/.exec(o.name))) knobs[m[1] as MacroKey] = o;
+      if ((m = /^knob_(\w+)$/.exec(o.name))) knobs[m[1] as MacroKey] = { obj: o, spring: new Spring(o.rotation.y, 700, 45) };
       if ((m = /^led_(\d+)$/.exec(o.name)) && mesh.isMesh) {
         leds[+m[1]] = mesh.material = new THREE.MeshStandardMaterial({ color: '#160302', emissive: '#ff2a14', roughness: 0.25, toneMapped: false });
       }
@@ -60,10 +62,13 @@ export function Pulse16() {
       }
       if (mesh.isMesh && !controlOf(o)) mesh.raycast = () => {}; // labels, LEDs, case: clicks fall through to controls
     });
-    return { movers, keys, leds, knobs, rims, hints, screen };
+    const ledLevel = leds.map(() => 0);
+    return { movers, keys, leds, ledLevel, knobs, rims, hints, screen };
   }
 
   const held = useRef<{ id: string; note?: string } | null>(null);
+  const hovered = useRef<string | null>(null);
+  const instant = useMemo(reducedMotion, []);
 
   useEffect(() => {
     const up = () => {
@@ -74,20 +79,30 @@ export function Pulse16() {
     return () => window.removeEventListener('pointerup', up);
   }, []);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     const s = useStore.getState();
     const now = performance.now();
-    for (const { obj, y0 } of rig.movers) {
+    const dt = Math.min(delta, 1 / 30);
+    for (const { obj, y0, spring } of rig.movers) {
       const i = /^key_(\d+)$/.exec(obj.name);
       const down = i ? s.pressed.includes(keyNote(+i[1])) : held.current?.id === obj.name || now - (s.flashes[obj.name] ?? 0) < 110;
-      obj.position.y = y0 - (down ? TRAVEL : 0);
+      const pad = /^track_(kick|snare|hat|clap)$/.exec(obj.name);
+      const bump = pad ? Math.max(0, 1 - (now - s.padHits[pad[1] as (typeof DRUMS)[number]]) / 120) * 0.4 : 0; // pads bounce with the beat
+      const target = down ? -TRAVEL : -TRAVEL * bump + (hovered.current === obj.name ? HOVER_LIFT : 0);
+      obj.position.y = y0 + spring.step(target, dt, instant);
     }
-    (Object.keys(rig.knobs) as MacroKey[]).forEach((k) => (rig.knobs[k]!.rotation.y = knobAngle(s.macros[k])));
+    (Object.keys(rig.knobs) as MacroKey[]).forEach((k) => {
+      const { obj, spring } = rig.knobs[k]!;
+      obj.rotation.y = spring.step(knobAngle(Math.round(s.macros[k] * DETENTS) / DETENTS), dt, instant); // snaps to detents
+    });
     const row = DRUMS.indexOf(s.selectedTrack as (typeof DRUMS)[number]);
     rig.leds.forEach((mat, i) => {
       const on = s.selectedTrack === 'notes' ? s.notes[i].length > 0 : s.drums[row][i];
       const cursor = s.selectedTrack === 'notes' && s.cursor === i;
-      mat.emissiveIntensity = i === s.currentStep ? 7 : cursor ? (Math.floor(now / 250) % 2 ? 5 : 0.4) : on ? 2.2 : 0;
+      const target = i === s.currentStep ? 7 : cursor ? (Math.floor(now / 250) % 2 ? 5 : 0.4) : on ? 2.2 : 0;
+      const tau = target > rig.ledLevel[i] ? 0.03 : 0.18; // fast rise, slow bulb-like decay
+      rig.ledLevel[i] += (target - rig.ledLevel[i]) * (instant ? 1 : 1 - Math.exp(-dt / tau));
+      mat.emissiveIntensity = rig.ledLevel[i];
     });
     TRACKS.forEach((t) => {
       const mat = rig.rims[t];
@@ -140,8 +155,15 @@ export function Pulse16() {
       object={scene}
       onPointerDown={onDown}
       onWheel={onWheel}
-      onPointerOver={(e: ThreeEvent<PointerEvent>) => controlOf(e.object) && (document.body.style.cursor = 'pointer')}
-      onPointerOut={() => (document.body.style.cursor = '')}
+      onPointerOver={(e: ThreeEvent<PointerEvent>) => {
+        const c = controlOf(e.object);
+        hovered.current = c?.name ?? null;
+        document.body.style.cursor = c ? 'pointer' : '';
+      }}
+      onPointerOut={() => {
+        hovered.current = null;
+        document.body.style.cursor = '';
+      }}
     />
   );
 }

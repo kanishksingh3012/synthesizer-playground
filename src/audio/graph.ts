@@ -40,7 +40,9 @@ const safe = (fn: () => void) => {
  * and Tone.Offline export, so the exported file sounds identical to what you hear.
  */
 export function buildGraph(p: SynthParams): Graph {
-  const limiter = new Tone.Limiter(-1).toDestination();
+  // Limiter reacts too slowly for drum transients; a tanh soft-clip after it guarantees peaks stay below 0 dBFS.
+  const clip = new Tone.WaveShaper((x) => Math.tanh(x), 4096).toDestination();
+  const limiter = new Tone.Limiter(-1).connect(clip);
   const comp = new Tone.Compressor(-14, 3).connect(limiter);
   const master = new Tone.Gain(1).connect(comp);
 
@@ -72,14 +74,14 @@ export function buildGraph(p: SynthParams): Graph {
   };
   apply(p);
 
-  const nodes = [limiter, comp, master, reverb, delay, filter, synth, drumBus, kick, snareHp, snare, hat, clapBp, clap, tom, perc];
+  const nodes = [clip, limiter, comp, master, reverb, delay, filter, synth, drumBus, kick, snareHp, snare, hat, clapBp, clap, tom, perc];
 
   return {
     synth,
     master,
     ready: reverb.ready,
     apply,
-    setVolume: (v) => master.gain.rampTo(v * v * 1.4, 0.05),
+    setVolume: (v) => master.gain.rampTo(v * v, 0.05),
     drums: {
       kick: (t) => safe(() => kick.triggerAttackRelease('C1', '8n', t)),
       snare: (t) => safe(() => snare.triggerAttackRelease('16n', t)),
