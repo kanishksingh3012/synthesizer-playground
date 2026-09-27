@@ -1,5 +1,20 @@
 import * as Tone from 'tone';
-import { DRUMS, rowToNote, type Drum, type Grid, type SynthParams } from '../state/store';
+import { DRUMS, type Drum, type Grid } from '../state/store';
+
+export type OscType = 'sine' | 'triangle' | 'square' | 'sawtooth';
+
+export interface SynthParams {
+  osc: OscType;
+  attack: number;
+  decay: number;
+  sustain: number;
+  release: number;
+  cutoff: number;
+  resonance: number;
+  delay: number;
+  reverb: number;
+  volume: number;
+}
 
 export interface Graph {
   synth: Tone.PolySynth;
@@ -7,6 +22,7 @@ export interface Graph {
   drums: Record<Drum, (time: number) => void>;
   ready: Promise<void>;
   apply: (p: SynthParams) => void;
+  setVolume: (v: number) => void;
   dispose: () => void;
 }
 
@@ -63,6 +79,7 @@ export function buildGraph(p: SynthParams): Graph {
     master,
     ready: reverb.ready,
     apply,
+    setVolume: (v) => master.gain.rampTo(v * v * 1.4, 0.05),
     drums: {
       kick: (t) => safe(() => kick.triggerAttackRelease('C1', '8n', t)),
       snare: (t) => safe(() => snare.triggerAttackRelease('16n', t)),
@@ -76,16 +93,13 @@ export function buildGraph(p: SynthParams): Graph {
 }
 
 export interface PatternSnapshot {
-  melody: Grid;
+  notes: string[][];
   drums: Grid;
-  seqOctave: number;
 }
 
 /** Triggers everything on one sequencer step. Shared by live transport and offline export. */
 export function playStep(g: Graph, s: PatternSnapshot, step: number, time: number, stepDur: number): Drum[] {
-  s.melody.forEach((row, r) => {
-    if (row[step]) g.synth.triggerAttackRelease(rowToNote(r, s.seqOctave), stepDur * 0.9, time);
-  });
+  s.notes[step]?.forEach((n) => g.synth.triggerAttackRelease(n, stepDur * 0.9, time));
   const hits: Drum[] = [];
   s.drums.forEach((row, r) => {
     if (row[step]) {

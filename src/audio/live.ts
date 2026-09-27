@@ -1,12 +1,10 @@
 import * as Tone from 'tone';
-import { STEPS, useStore, type Drum } from '../state/store';
+import { STEPS, bpmOf, useStore, type Drum } from '../state/store';
 import { buildGraph, playStep, type Graph } from './graph';
+import { toParams } from './sounds';
 
 let graph: Graph | null = null;
-let waveform: Tone.Waveform | null = null;
 let starting: Promise<Graph> | null = null;
-
-export const getWaveform = () => waveform;
 
 /** Browsers only allow audio after a user gesture; every entry point goes through here. */
 export function ensureAudio(): Promise<Graph> {
@@ -14,26 +12,20 @@ export function ensureAudio(): Promise<Graph> {
   starting ??= (async () => {
     await Tone.start();
     const st = useStore.getState();
-    const g = buildGraph(st.params);
-    waveform = new Tone.Waveform(512);
-    g.master.connect(waveform);
+    const g = buildGraph(toParams(st.soundIndex, st.macros));
+    g.setVolume(st.macros.volume);
 
     const transport = Tone.getTransport();
-    const syncTransport = () => {
-      const { bpm, swing } = useStore.getState();
-      transport.bpm.value = bpm;
-      transport.swing = swing;
-      transport.swingSubdivision = '16n';
-    };
-    syncTransport();
+    transport.bpm.value = bpmOf(st.macros.speed);
 
     new Tone.Sequence(
       (time, step) => {
-        const s = useStore.getState();
-        const hits = playStep(g, s, step, time, Tone.Time('16n').toSeconds());
+        const hits = playStep(g, useStore.getState(), step, time, Tone.Time('16n').toSeconds());
         Tone.getDraw().schedule(() => {
-          useStore.setState({ currentStep: step });
-          hits.forEach((d) => useStore.getState().hitPad(d));
+          const now = performance.now();
+          const padHits = { ...useStore.getState().padHits };
+          hits.forEach((d) => (padHits[d] = now));
+          useStore.setState({ currentStep: step, padHits });
         }, time);
       },
       [...Array(STEPS).keys()],
@@ -41,8 +33,9 @@ export function ensureAudio(): Promise<Graph> {
     ).start(0);
 
     useStore.subscribe((s, prev) => {
-      if (s.params !== prev.params) g.apply(s.params);
-      if (s.bpm !== prev.bpm || s.swing !== prev.swing) syncTransport();
+      if (s.soundIndex !== prev.soundIndex || s.macros !== prev.macros) g.apply(toParams(s.soundIndex, s.macros));
+      if (s.macros.volume !== prev.macros.volume) g.setVolume(s.macros.volume);
+      if (s.macros.speed !== prev.macros.speed) transport.bpm.rampTo(bpmOf(s.macros.speed), 0.05);
     });
 
     graph = g;
@@ -53,19 +46,15 @@ export function ensureAudio(): Promise<Graph> {
 }
 
 export async function noteOn(note: string) {
-  useStore.getState().press(note);
   const g = await ensureAudio();
   g.synth.triggerAttack(note, Tone.now());
 }
 
 export function noteOff(note: string) {
-  if (!useStore.getState().pressed.includes(note)) return;
-  useStore.getState().release(note);
   graph?.synth.triggerRelease(note, Tone.now());
 }
 
 export async function hitDrum(d: Drum) {
-  useStore.getState().hitPad(d);
   const g = await ensureAudio();
   g.drums[d](Tone.now());
 }

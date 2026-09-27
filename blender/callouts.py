@@ -23,7 +23,10 @@ def compose(render_path, callouts_path, out_path, legend_w=620):
 
     r = 17
     for it in items:
-        x, y = it['x'] * w, it['y'] * h
+        px, py = it['x'] * w, it['y'] * h
+        x, y = px - 34, py - 34  # marker sits beside the control, leader line points at it
+        d.line([(x, y), (px, py)], fill=(255, 255, 255), width=3)
+        d.ellipse([px - 5, py - 5, px + 5, py + 5], fill=ORANGE, outline=(255, 255, 255), width=2)
         d.ellipse([x - r - 3, y - r - 3, x + r + 3, y + r + 3], fill=(255, 255, 255))
         d.ellipse([x - r, y - r, x + r, y + r], fill=ORANGE)
         d.text((x, y), str(it['n']), font=num_f, fill=(255, 255, 255), anchor='mm')

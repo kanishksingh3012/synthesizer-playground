@@ -31,6 +31,11 @@ def callout(title, job, pos):
     CALLOUTS.append((len(CALLOUTS) + 1, title, job, pos))
 
 
+def keycap(label, x, y, z, m, ink='ink'):
+    """Keyboard-shortcut hint printed flat on the control, same style as the letters on the piano keys."""
+    c.text(label, (x, y, z + 0.001), 0.12, m[ink], font=c.FONT_BOLD).name = f'hint_{label}'
+
+
 def check_bounds():
     bad = []
     for name, plate, x0, x1, y0, y1 in FOOTPRINTS:
@@ -96,7 +101,7 @@ def build():
 
     for x, name, n, job in [(1.3, 'SPEED', 0.4, 'how fast the loop plays'), (2.55, 'VOLUME', 0.7, 'overall loudness')]:
         knob(name.lower(), x, 1.62, 0.24, n, m)
-        c.text(name, (x, 1.13, z), 0.1, m['ink'])
+        c.text(name, (x, 1.12, z), 0.12, m['ink'])
         place(name, 'upper', x, 1.45, 0.8, 0.8)
         callout(name, job, (x, 1.62, TOP + 0.3))
 
@@ -105,18 +110,19 @@ def build():
                                         ('ECHO', 0.2, 'repeats of each note'), ('SPACE', 0.25, 'small room to big hall')]):
         kx = -2.6 + i * 0.95
         knob(name.lower(), kx, 0.8, 0.2, n, m)
-        c.text(name, (kx, 0.4, z), 0.1, m['ink'])
+        c.text(name, (kx, 0.39, z), 0.12, m['ink'])
         place(name, 'upper', kx, 0.62, 0.7, 0.62)
         callout(name, job, (kx, 0.8, TOP + 0.28))
     for x, name, job in [(1.3, 'SOUND', 'pick Bass, Keys, Lead or Pad'), (2.55, 'CLEAR', 'wipe the selected track')]:
         c.box(f'btn_{name.lower()}', (0.86, 0.46, 0.1), (x, 0.7, TOP), m['btn'], bev=0.05, seg=4)
-        c.text(name, (x, 0.7, TOP + 0.101), 0.12, m['ink_w'])
+        c.text(name, (x + 0.12, 0.7, TOP + 0.101), 0.12, m['ink_w'])
+        keycap({'SOUND': 'N', 'CLEAR': '⌫'}[name], x - 0.28, 0.7, TOP + 0.1, m, 'ink_w')
         place(name, 'upper', x, 0.7, 0.86, 0.46)
         callout(name, job, (x, 0.7, TOP + 0.1))
 
     # --- middle: 5 track pads above the 16 steps -------------------------------------
-    tracks = [('KICK', (0.55, 0.12, 0.05), (1, 0.3, 0.1), 'ink_w'), ('SNARE', (0.62, 0.44, 0.07), (1, 0.75, 0.2), 'ink'),
-              ('HAT', (0.1, 0.38, 0.33), (0.3, 1, 0.8), 'ink_w'), ('CLAP', (0.14, 0.24, 0.55), (0.35, 0.6, 1), 'ink_w'),
+    tracks = [('KICK', (0.55, 0.12, 0.05), (1, 0.3, 0.1), 'ink'), ('SNARE', (0.62, 0.44, 0.07), (1, 0.75, 0.2), 'ink'),
+              ('HAT', (0.1, 0.38, 0.33), (0.3, 1, 0.8), 'ink'), ('CLAP', (0.14, 0.24, 0.55), (0.35, 0.6, 1), 'ink'),
               ('NOTES', (0.7, 0.68, 0.6), (1, 0.95, 0.85), 'ink')]
     pitch = 6.2 / len(tracks)
     for i, (name, col, glow, ink) in enumerate(tracks):
@@ -124,7 +130,8 @@ def build():
         sel = name == 'KICK'
         c.box(f'track_{name.lower()}_rim', (pitch - 0.06, 0.44, 0.03), (px, 0.0, TOP), c.emissive(f'rim{i}', glow, 10.0 if sel else 0.15), bev=0.04, seg=4)
         c.box(f'track_{name.lower()}', (pitch - 0.14, 0.36, 0.1), (px, 0.0, TOP), c.rubber(f'pad{i}', col, 0.7, glow if sel else None, 0.25 if sel else 0), bev=0.06, seg=4)
-        c.text(name, (px, 0.0, TOP + 0.101), 0.11, m[ink])
+        c.text(name, (px + 0.12, 0.0, TOP + 0.101), 0.12, m[ink])
+        keycap('ZXCVB'[i], px - pitch / 2 + 0.24, 0.0, TOP + 0.1, m)
         place(f'track_{name}', 'strip', px, 0.0, pitch - 0.06, 0.44)
     callout('TRACK PADS', 'tap to hear a drum + choose what the steps edit', (-0.62, 0.0, TOP + 0.1))
     callout('NOTES', 'edit the melody instead of a drum', (-3.1 + pitch * 4.5, 0.0, TOP + 0.1))
@@ -134,20 +141,22 @@ def build():
         c.box(f'step_{i}', (0.33, 0.46, 0.1), (sx_, -0.8, TOP), steps[i // 4], bev=0.03, seg=4)
         lm = m['led_on'] if i == PLAYHEAD else m['led_used'] if i in SELECTED_STEPS else m['led_off']
         c.dome(f'led_{i}', 0.042, 0.028, (sx_, -0.36, TOP), lm)
-        c.text(str(i + 1), (sx_, -1.22, z), 0.085, m['ink_w'])
+        c.text(str(i + 1), (sx_, -1.22, z), 0.1, m['ink_w'])
         place(f'step_{i}', 'strip', sx_, -0.8, 0.33, 0.46)
     callout('STEP LIGHTS', 'which beats are on + where the loop is', (0.2, -0.36, TOP))
     callout('STEP KEYS', 'turn each of the 16 beats on or off', (-1.365, -0.8, TOP + 0.1))
 
     # --- front: PLAY, OCT, keys ----------------------------------------------------------
     c.box('btn_play', (0.8, 0.62, 0.12), (-2.72, -1.95, WELL), m['play'], bev=0.06, seg=4)
-    c.text('▶ ■', (-2.72, -1.95, WELL + 0.121), 0.2, m['ink'], font=c.FONT_REG)
+    c.text('▶ ■', (-2.72, -2.03, WELL + 0.121), 0.2, m['ink'], font=c.FONT_REG)
+    keycap('SPACE', -2.72, -1.8, WELL + 0.12, m)
     place('PLAY', 'well', -2.72, -1.95, 0.8, 0.62)
     callout('PLAY / STOP', 'start or stop the loop', (-2.72, -1.95, WELL + 0.12))
     for i, label in enumerate(['OCT −', 'OCT +']):
         bx = -1.78 + i * 0.54
         c.box(f'btn_oct{i}', (0.46, 0.4, 0.09), (bx, -1.95, WELL), m['btn'], bev=0.045, seg=4)
-        c.text(label, (bx, -1.95, WELL + 0.091), 0.085, m['ink_w'], font=c.FONT_BOLD)
+        c.text(label, (bx, -2.04, WELL + 0.091), 0.085, m['ink_w'], font=c.FONT_BOLD)
+        keycap('-='[i], bx, -1.84, WELL + 0.09, m, 'ink_w')
         place(label, 'well', bx, -1.95, 0.46, 0.4)
     callout('OCT − / +', 'move the keys lower or higher', (-1.51, -1.95, WELL + 0.09))
 
@@ -155,6 +164,15 @@ def build():
     white_w = 0.48
     x0 = (zone0 + zone1) / 2 - 4 * white_w
     c.keybed('key', x0, -2.36, white_w, 0.82, 0.5, WELL, m, gap=0.022, white_h=0.14, black_h=0.09, count=13, pressed=(0,))
+    white_i, letters = -1, 'AWSEDFTGYHUJK'
+    for i, ch in enumerate(letters):
+        sharp = i % 12 in c.NOTE_SHARP
+        if not sharp:
+            white_i += 1
+        if sharp:
+            c.text(ch, (x0 + (white_i + 1) * white_w, -1.95, WELL + 0.232), 0.1, m['ink_w'], font=c.FONT_BOLD).name = f'hint_{ch}'
+        else:
+            c.text(ch, (x0 + white_i * white_w + white_w / 2, -2.24, WELL + 0.141 - (0.04 if i == 0 else 0)), 0.12, m['ink'], font=c.FONT_BOLD).name = f'hint_{ch}'
     place('keys', 'well', (zone0 + zone1) / 2, -1.95, 8 * white_w, 0.82)
     callout('KEYS', 'play notes; on NOTES, write them into steps', ((zone0 + zone1) / 2, -2.1, WELL + 0.15))
 
@@ -173,9 +191,30 @@ def save_callouts(cam, path):
         json.dump(out, f, indent=1)
 
 
+def export_glb(path):
+    """Web export: text -> meshes, no floor/lights/cameras, screen gets a plain material (the app draws it live)."""
+    dg = bpy.context.evaluated_depsgraph_get()
+    for o in [o for o in bpy.data.objects if o.type == 'FONT']:
+        name, mw = o.name, o.matrix_world.copy()
+        me = bpy.data.meshes.new_from_object(o.evaluated_get(dg))
+        bpy.data.objects.remove(o)
+        mo = bpy.data.objects.new(name, me)
+        mo.matrix_world = mw
+        bpy.context.scene.collection.objects.link(mo)
+    for o in [o for o in bpy.data.objects if o.name == 'floor' or o.type in ('LIGHT', 'CAMERA')]:
+        bpy.data.objects.remove(o)
+    bpy.data.objects['screen'].data.materials[0] = c.ink('screen_blank', (0.01, 0.0, 0.0), 0.2)
+    bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', export_apply=True, export_cameras=False,
+                              export_lights=False, export_yup=True)
+    print('exported', path, flush=True)
+
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
     top, hero = build()
+    if os.environ.get('EXPORT'):
+        export_glb(os.environ['EXPORT'])
+        sys.exit(0)
     views = os.environ.get('VIEWS', 'top,hero').split(',')
     save_callouts(top, os.path.join(OUT, 'basic_callouts.json'))
     if 'top' in views:
