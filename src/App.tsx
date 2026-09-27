@@ -1,11 +1,35 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { Suspense, lazy, useEffect, useState, type ReactNode } from 'react';
 import { Button, Kbd, Label, Modal, Switch, Toast, toast } from '@heroui/react';
-import { Stage } from './scene/Stage';
 import { installKeyboard } from './input/keyboard';
 import { useStore } from './state/store';
 import { beatFromHash } from './state/share';
 import { ExportDialog } from './ui/ExportDialog';
 import { ShareDialog } from './ui/ShareDialog';
+import { DesktopGate } from './ui/DesktopGate';
+
+// The 3D synth (three.js, model, audio engine) loads on demand, so gated phones never download it.
+const Stage = lazy(() => import('./scene/Stage').then((m) => ({ default: m.Stage })));
+
+const SMALL_SCREEN = '(max-width: 759px), (pointer: coarse) and (max-width: 1023px)';
+
+function useMedia(query: string) {
+  const [match, setMatch] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const on = () => setMatch(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, [query]);
+  return match;
+}
+
+const session = (key: string) => {
+  try {
+    return sessionStorage.getItem(key) === '1';
+  } catch {
+    return false;
+  }
+};
 
 const SHORTCUTS: [string[], string][] = [
   [['A', 'W', 'S', 'E', 'D', 'F', 'T', 'G', 'Y', 'H', 'U', 'J', 'K'], 'play notes'],
@@ -38,8 +62,11 @@ export default function App() {
   const audioReady = useStore((s) => s.audioReady);
   const set = useStore((s) => s.set);
   const [dialog, setDialog] = useState<'export' | 'share' | null>(null);
+  const small = useMedia(SMALL_SCREEN);
+  const [tryAnyway, setTryAnyway] = useState(() => session('pulse16.tryAnyway'));
+  const gated = small && !tryAnyway;
 
-  useEffect(() => installKeyboard(), []);
+  useEffect(() => (gated ? undefined : installKeyboard()), [gated]);
   useEffect(() => {
     if (hashChecked) return;
     hashChecked = true;
@@ -59,6 +86,23 @@ export default function App() {
       /* private mode: preference just isn't remembered */
     }
   };
+
+  if (gated)
+    return (
+      <>
+        <DesktopGate
+          onTryAnyway={() => {
+            setTryAnyway(true);
+            try {
+              sessionStorage.setItem('pulse16.tryAnyway', '1');
+            } catch {
+              /* fine: they'll just see the gate again next visit */
+            }
+          }}
+        />
+        <Toast.Provider placement="bottom" />
+      </>
+    );
 
   return (
     <div className="app">
@@ -85,7 +129,9 @@ export default function App() {
         </div>
       </header>
       <main className="stage">
-        <Stage />
+        <Suspense fallback={<div className="hint">Loading the synth…</div>}>
+          <Stage />
+        </Suspense>
         {!audioReady && <div className="hint">Click any control or press a key to start sound</div>}
       </main>
 

@@ -10,7 +10,7 @@ export type Grid = boolean[][];
 export const emptyGrid = (rows: number): Grid => Array.from({ length: rows }, () => Array<boolean>(STEPS).fill(false));
 export const emptyNotes = (): string[][] => Array.from({ length: STEPS }, () => []);
 
-export type MacroKey = 'speed' | 'volume' | 'tone' | 'length' | 'echo' | 'space';
+export type MacroKey = 'speed' | 'volume' | 'pitch' | 'tone' | 'length' | 'echo' | 'space';
 export type Macros = Record<MacroKey, number>; // all 0..1
 
 export const bpmOf = (speed: number) => Math.round(60 + speed * 120);
@@ -47,14 +47,14 @@ const storedFlag = (key: string) => {
 
 export const useStore = create<PlaygroundState>((set) => ({
   soundIndex: 0,
-  macros: { speed: 0.43, volume: 0.75, tone: 0.45, length: 0.3, echo: 0.15, space: 0.2 },
+  macros: { speed: 0.43, volume: 0.75, pitch: 0.5, tone: 0.5, length: 0.3, echo: 0.12, space: 0.2 },
   drums: emptyGrid(DRUMS.length),
   notes: emptyNotes(),
   selectedTrack: 'kick',
   cursor: -1,
   playing: false,
   currentStep: -1,
-  keyOctave: 3,
+  keyOctave: 4,
   pressed: [],
   lastNote: '--',
   padHits: { kick: 0, snare: 0, hat: 0, clap: 0, tom: 0, perc: 0 },

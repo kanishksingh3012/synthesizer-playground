@@ -1,10 +1,10 @@
 import { DRUMS, STEPS, emptyGrid, emptyNotes, type Macros, type PlaygroundState } from './store';
 
 // A beat fits in the URL hash (#beat=...), so sharing needs no server or account.
-// Format v1: base64url(JSON { v, s: sound, m: 6 knobs ×100, d: drum rows as hex bitmasks, n: MIDI notes per step }).
+// Format v1: base64url(JSON { v, s: sound, m: 7 knobs ×100 (older links: 6, no PITCH), d: drum rows as hex bitmasks, n: MIDI notes per step }).
 
 const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const KNOBS: (keyof Macros)[] = ['speed', 'volume', 'tone', 'length', 'echo', 'space'];
+const KNOBS: (keyof Macros)[] = ['speed', 'volume', 'tone', 'length', 'echo', 'space', 'pitch'];
 const SOUND_COUNT = 4;
 
 const toMidi = (n: string) => {
@@ -33,7 +33,7 @@ export function encodeBeat(b: Beat): string {
 export function decodeBeat(code: string): Beat | null {
   try {
     const p = JSON.parse(unb64url(code));
-    if (p?.v !== 1 || !Array.isArray(p.m) || p.m.length !== KNOBS.length || !Array.isArray(p.d) || !Array.isArray(p.n)) return null;
+    if (p?.v !== 1 || !Array.isArray(p.m) || (p.m.length !== KNOBS.length && p.m.length !== KNOBS.length - 1) || !Array.isArray(p.d) || !Array.isArray(p.n)) return null;
     const int = (x: unknown, lo: number, hi: number) => Number.isInteger(x) && (x as number) >= lo && (x as number) <= hi;
     if (!int(p.s, 0, SOUND_COUNT - 1) || !p.m.every((x: unknown) => int(x, 0, 100))) return null;
     const drums = emptyGrid(DRUMS.length);
@@ -47,7 +47,7 @@ export function decodeBeat(code: string): Beat | null {
       if (!Array.isArray(cell)) throw new Error('bad cell');
       notes[i] = cell.filter((m) => int(m, 12, 107)).slice(0, 8).map(fromMidi);
     });
-    const macros = Object.fromEntries(KNOBS.map((k, i) => [k, p.m[i] / 100])) as Macros;
+    const macros = Object.fromEntries(KNOBS.map((k, i) => [k, (p.m[i] ?? 50) / 100])) as Macros; // links from before PITCH: centre
     return { soundIndex: p.s, macros, drums, notes };
   } catch {
     return null;
@@ -58,7 +58,7 @@ export const shareUrl = (b: Beat) => `${location.origin}${location.pathname}#bea
 
 /** Reads #beat=… from the address bar. */
 export function beatFromHash(): Beat | 'invalid' | null {
-  const m = /[#&]beat=([\w-]+)/.exec(location.hash);
+  const m = /[#&]beat=([^&]*)/.exec(location.hash);
   if (!m) return null;
   return decodeBeat(m[1]) ?? 'invalid';
 }

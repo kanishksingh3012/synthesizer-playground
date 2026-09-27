@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { useFrame, type ThreeEvent } from '@react-three/fiber';
+import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { DRUMS, TRACKS, useStore, type MacroKey, type Track } from '../state/store';
-import { DETENTS, clearTrack, keyNote, nextSound, pressKey, releaseNote, setMacro, shiftOctave, tapStep, tapTrack, togglePlay } from '../controller';
+import { clearTrack, keyNote, nextSound, pressKey, releaseNote, setMacro, shiftOctave, tapStep, tapTrack, togglePlay } from '../controller';
 import { createScreen } from './screenTexture';
+import { detentsOf } from '../audio/sounds';
 import { Spring, reducedMotion } from './spring';
 
 const MODEL = '/models/pulse16-basic.glb';
-const CONTROL = /^(key_\d+|step_\d+|track_(kick|snare|hat|clap|notes)|btn_(play|sound|clear|oct0|oct1)|knob_(speed|volume|tone|length|echo|space))$/;
+const CONTROL = /^(key_\d+|step_\d+|track_(kick|snare|hat|clap|notes)|btn_(play|sound|clear|oct0|oct1)|knob_(speed|volume|pitch|tone|length|echo|space))$/;
 const TRAVEL = 0.03; // press depth (model units)
 const HOVER_LIFT = 0.006;
 
@@ -21,6 +22,7 @@ const knobAngle = (v: number) => (0.75 - v * 1.5) * Math.PI;
 /** The PULSE-16 BASIC model (exported from blender/build_basic.py), wired to the controller by node name. */
 export function Pulse16() {
   const { scene } = useGLTF(MODEL);
+  const maxAnisotropy = useThree((st) => st.gl.capabilities.getMaxAnisotropy());
   // Setup mutates the shared glTF scene, so it runs once per scene (StrictMode double-invokes memos).
   const rig = useMemo(() => {
     if (scene.userData.rig) return scene.userData.rig as ReturnType<typeof setup>;
@@ -35,9 +37,19 @@ export function Pulse16() {
     const knobs: Partial<Record<MacroKey, { obj: THREE.Object3D; spring: Spring }>> = {};
     const rims: Partial<Record<Track, THREE.MeshStandardMaterial>> = {};
     const hints: THREE.Object3D[] = [];
+    const baked = new Map<THREE.Material, THREE.MeshBasicMaterial>();
     scene.traverse((o) => {
       const mesh = o as THREE.Mesh;
       let m: RegExpExecArray | null;
+      const src = mesh.material as THREE.MeshStandardMaterial | undefined;
+      if (mesh.isMesh && src?.name === 'baked' && src.map) {
+        // Cycles already baked light, shadows and the display transform into this texture: show it unlit
+        if (!baked.has(src)) {
+          src.map.anisotropy = maxAnisotropy;
+          baked.set(src, new THREE.MeshBasicMaterial({ map: src.map, toneMapped: false }));
+        }
+        mesh.material = baked.get(src)!;
+      }
       if (CONTROL.test(o.name) && !o.name.startsWith('knob_')) movers.push({ obj: o, y0: o.position.y, spring: new Spring(0) });
       if ((m = /^key_(\d+)$/.exec(o.name))) keys[+m[1]] = o;
       if ((m = /^knob_(\w+)$/.exec(o.name))) knobs[m[1] as MacroKey] = { obj: o, spring: new Spring(o.rotation.y, 700, 45) };
@@ -93,7 +105,8 @@ export function Pulse16() {
     }
     (Object.keys(rig.knobs) as MacroKey[]).forEach((k) => {
       const { obj, spring } = rig.knobs[k]!;
-      obj.rotation.y = spring.step(knobAngle(Math.round(s.macros[k] * DETENTS) / DETENTS), dt, instant); // snaps to detents
+      const n = detentsOf(k);
+      obj.rotation.y = spring.step(knobAngle(Math.round(s.macros[k] * n) / n), dt, instant); // snaps to detents
     });
     const row = DRUMS.indexOf(s.selectedTrack as (typeof DRUMS)[number]);
     rig.leds.forEach((mat, i) => {
@@ -147,7 +160,10 @@ export function Pulse16() {
     if (!m) return;
     e.stopPropagation();
     const k = m[1] as MacroKey;
-    setMacro(k, useStore.getState().macros[k] - e.deltaY * 0.0012);
+    const v = useStore.getState().macros[k];
+    if (k === 'pitch') {
+      if (Math.abs(e.deltaY) >= 4) setMacro(k, (Math.round(v * 24) - Math.sign(e.deltaY)) / 24); // one semitone per notch
+    } else setMacro(k, v - e.deltaY * 0.0012);
   };
 
   return (

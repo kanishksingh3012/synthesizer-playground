@@ -105,10 +105,11 @@ def build():
         place(name, 'upper', x, 1.45, 0.8, 0.8)
         callout(name, job, (x, 1.62, TOP + 0.3))
 
-    # --- back row 2: TONE LENGTH ECHO SPACE | SOUND, CLEAR ---------------------------
-    for i, (name, n, job) in enumerate([('TONE', 0.45, 'dark to bright'), ('LENGTH', 0.35, 'short to long notes'),
-                                        ('ECHO', 0.2, 'repeats of each note'), ('SPACE', 0.25, 'small room to big hall')]):
-        kx = -2.6 + i * 0.95
+    # --- back row 2: PITCH TONE LENGTH ECHO SPACE | SOUND, CLEAR ---------------------
+    for i, (name, n, job) in enumerate([('PITCH', 0.5, 'melody up or down, in semitones'), ('TONE', 0.5, 'dark to bright'),
+                                        ('LENGTH', 0.3, 'short to long sounds'), ('ECHO', 0.12, 'repeats of each hit'),
+                                        ('SPACE', 0.2, 'small room to big hall')]):
+        kx = -2.8 + i * 0.78
         knob(name.lower(), kx, 0.8, 0.2, n, m)
         c.text(name, (kx, 0.39, z), 0.12, m['ink'])
         place(name, 'upper', kx, 0.62, 0.7, 0.62)

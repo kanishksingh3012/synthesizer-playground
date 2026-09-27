@@ -1,8 +1,7 @@
 import { Suspense, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { ContactShadows, Environment } from '@react-three/drei';
-import { Bloom, EffectComposer, ToneMapping } from '@react-three/postprocessing';
-import { ToneMappingMode } from 'postprocessing';
+import { Bloom, EffectComposer } from '@react-three/postprocessing';
 import type { PerspectiveCamera } from 'three';
 import { Pulse16 } from './Pulse16';
 
@@ -27,7 +26,7 @@ function TopCamera() {
 
 export function Stage() {
   return (
-    <Canvas dpr={[1, 2]} camera={{ fov: 28 }} gl={{ antialias: false }}>
+    <Canvas flat dpr={[1, 2]} camera={{ fov: 28 }} gl={{ antialias: false }}>
       <color attach="background" args={['#d2d3d6']} />
       <directionalLight position={[-3, 10, 6]} intensity={0.5} />
       <Suspense fallback={null}>
@@ -36,9 +35,9 @@ export function Stage() {
       </Suspense>
       <ContactShadows position={[0, 0, 0]} opacity={0.45} scale={16} blur={2.6} far={2} />
       <TopCamera />
+      {/* no tone mapping pass: the baked texture already carries the renders' AgX look */}
       <EffectComposer multisampling={4}>
         <Bloom mipmapBlur luminanceThreshold={1.5} intensity={0.7} />
-        <ToneMapping mode={ToneMappingMode.NEUTRAL} />
       </EffectComposer>
     </Canvas>
   );

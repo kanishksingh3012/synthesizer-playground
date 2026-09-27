@@ -1,6 +1,6 @@
 import * as Tone from 'tone';
 import { STEPS, bpmOf, useStore, type Drum } from '../state/store';
-import { buildGraph, playStep, type Graph } from './graph';
+import { buildGraph, playStep, transposeNote, type Graph } from './graph';
 import { toParams } from './sounds';
 
 let graph: Graph | null = null;
@@ -45,13 +45,19 @@ export function ensureAudio(): Promise<Graph> {
   return starting;
 }
 
+const sounding = new Map<string, string>(); // key note -> pitch actually playing (PITCH may move while a key is held)
+
 export async function noteOn(note: string) {
   const g = await ensureAudio();
-  g.synth.triggerAttack(note, Tone.now());
+  const played = transposeNote(note, g.transpose);
+  sounding.set(note, played);
+  g.synth.triggerAttack(played, Tone.now());
 }
 
 export function noteOff(note: string) {
-  graph?.synth.triggerRelease(note, Tone.now());
+  const played = sounding.get(note) ?? note;
+  sounding.delete(note);
+  graph?.synth.triggerRelease(played, Tone.now());
 }
 
 export async function hitDrum(d: Drum) {
