@@ -18,3 +18,13 @@ npm install && npm run dev
 python -m venv .venv && .venv/bin/pip install bpy==5.0.1 numpy pillow
 SYNTH_ASSETS=blender/assets .venv/bin/python blender/build_hex16.py renders   # SPP=16 RES_PCT=40 for a quick test
 ```
+
+## Link-preview cards
+Three designs in `public/previews/`: **A** split (`hex16-a.jpg`), **B** centred (`hex16-b.jpg`, the live one), **C** sequencer (`hex16-c.jpg`).
+To switch, change `og:image` / `twitter:image` in `index.html`. Regenerate: `python scripts/preview_cards.py` (Pillow + `npm install` for the Inter font);
+the transparent source renders in `docs/brand/` come from `SPP=96 python blender/render_card.py docs/brand`.
+
+## Checks (Playwright, Chromium)
+- `node scripts/qa.cjs <out-dir> [url]` — production smoke test against `vite preview` (render, export, share links, phone gate).
+- `node scripts/sound-probe.cjs` and `node scripts/click-levels.cjs` — audio levels against the dev server (`npx vite --port 5174`).
+- `npx tsx --tsconfig tsconfig.app.json scripts/tutorial-preview.tsx tutorial-preview.html` — the tutorial as one review page.
