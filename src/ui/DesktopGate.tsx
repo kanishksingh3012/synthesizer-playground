@@ -12,9 +12,9 @@ export function DesktopGate({ onTryAnyway }: { onTryAnyway: () => void }) {
   };
   return (
     <main className="gate">
-      <img src="/gate.jpg" alt="The PULSE-16 synthesizer" width={720} height={450} />
+      <img src="/gate.jpg" alt="The HEX-16 synthesizer" width={720} height={450} />
       <h1>
-        PULSE-16 <b>BASIC</b>
+        HEX<b>-16</b>
       </h1>
       <p>Made for desktop — play it with your keyboard and mouse on a bigger screen.</p>
       <div className="gate-actions">

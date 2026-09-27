@@ -1,11 +1,11 @@
 @import '@heroui/styles';
 
-/* PULSE-16 colour system mapped onto HeroUI tokens (light studio theme).
+/* HEX-16 colour system mapped onto HeroUI tokens (light studio theme).
    A dark version later only needs a second block like this under .dark. */
 :root,
 .light,
 [data-theme='light'] {
-  --accent: #ff6a2b; /* PULSE-16 orange: PLAY key, selected states */
+  --accent: #ff6a2b; /* HEX-16 orange: PLAY key, selected states */
   --accent-foreground: #ffffff;
   --background: #d2d3d6; /* studio floor behind the synth */
   --foreground: #1f2226;

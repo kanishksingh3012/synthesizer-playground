@@ -1,4 +1,4 @@
-"""PULSE-16 BASIC v2 — layout A "workbench rows": controls ordered by how often you touch them
+"""HEX-16 (formerly PULSE-16 BASIC) — layout A "workbench rows": controls ordered by how often you touch them
 (sound settings at the back, track pads directly above the steps, PLAY + keys under your hands)."""
 import json
 import os
@@ -84,10 +84,11 @@ def build():
         x0, x1, y0, y1 = PLATES[key]
         c.box(f'plate_{key}', (x1 - x0, y1 - y0, h), ((x0 + x1) / 2, (y0 + y1) / 2, 0.5), mat, bev=0.015 if h > 0.03 else 0.01)
 
-    c.text('PULSE-16', (-3.05, 2.2, z), 0.22, m['ink'], align='LEFT', spacing=1.2)
-    c.text('BASIC', (-1.55, 2.2, z), 0.22, m['ink_r'], align='LEFT', spacing=1.2)
+    # two-tone wordmark: HEX in ink, -16 in orange right after it (placed from HEX's measured width)
+    hex_ = c.text('HEX', (-3.05, 2.2, z), 0.27, m['ink'], align='LEFT', spacing=1.2)
+    bpy.context.view_layer.update()
+    c.text('-16', (-3.05 + hex_.dimensions.x + 0.02, 2.2, z), 0.27, m['ink_r'], align='LEFT', spacing=1.2)
     c.text('PLAYGROUND ELECTRONICS', (3.05, 2.19, z), 0.09, m['ink'], align='RIGHT', spacing=1.5)
-    c.box('rule', (6.1, 0.012, 0.002), (0, 2.03, TOP), m['ink'], bev=0)
 
     # --- back row 1: screen | SPEED, VOLUME ------------------------------------------
     disp = os.path.join(OUT, 'basic_matrix.png')

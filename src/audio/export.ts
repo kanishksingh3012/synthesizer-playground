@@ -78,7 +78,7 @@ export async function exportFile(opts: ExportOptions, onProgress: (p: number) =>
   const blob = opts.format === 'wav' ? encodeWav(audio) : await encodeMp3(audio, (p) => onProgress(0.5 + p * 0.5));
   onProgress(1);
   const bpm = bpmOf(useStore.getState().macros.speed);
-  return { blob, name: `pulse16-${bpm}bpm-${opts.loops}x.${opts.format}`, seconds: audio.duration };
+  return { blob, name: `hex16-${bpm}bpm-${opts.loops}x.${opts.format}`, seconds: audio.duration };
 }
 
 export function download(blob: Blob, name: string) {
