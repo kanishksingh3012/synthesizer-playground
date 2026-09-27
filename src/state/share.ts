@@ -58,7 +58,7 @@ export const shareUrl = (b: Beat) => `${location.origin}${location.pathname}#bea
 
 /** Reads #beat=… from the address bar. */
 export function beatFromHash(): Beat | 'invalid' | null {
-  const m = /[#&]beat=([\w-]+)/.exec(location.hash);
+  const m = /[#&]beat=([^&]*)/.exec(location.hash);
   if (!m) return null;
   return decodeBeat(m[1]) ?? 'invalid';
 }
