@@ -19,7 +19,7 @@ const controlOf = (o: THREE.Object3D | null): THREE.Object3D | null => {
 };
 const knobAngle = (v: number) => (0.75 - v * 1.5) * Math.PI;
 
-/** The PULSE-16 BASIC model (exported from blender/build_basic.py), wired to the controller by node name. */
+/** The HEX-16 model (file names keep its first name, PULSE-16) (exported from blender/build_basic.py), wired to the controller by node name. */
 export function Pulse16() {
   const { scene } = useGLTF(MODEL);
   const maxAnisotropy = useThree((st) => st.gl.capabilities.getMaxAnisotropy());

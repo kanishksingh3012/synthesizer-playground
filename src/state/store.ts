@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 export const DRUMS = ['kick', 'snare', 'hat', 'clap', 'tom', 'perc'] as const; // engine voices
 export type Drum = (typeof DRUMS)[number];
-export const TRACKS = ['kick', 'snare', 'hat', 'clap', 'notes'] as const; // PULSE-16 BASIC track pads
+export const TRACKS = ['kick', 'snare', 'hat', 'clap', 'notes'] as const; // HEX-16 track pads
 export type Track = (typeof TRACKS)[number];
 export const STEPS = 16;
 

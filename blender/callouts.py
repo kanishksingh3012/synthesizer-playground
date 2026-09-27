@@ -32,7 +32,7 @@ def compose(render_path, callouts_path, out_path, legend_w=620):
         d.text((x, y), str(it['n']), font=num_f, fill=(255, 255, 255), anchor='mm')
 
     lx = w + 40
-    d.text((lx, 38), 'PULSE-16 BASIC — every control', font=head_f, fill=(240, 240, 240))
+    d.text((lx, 38), 'HEX-16 — every control', font=head_f, fill=(240, 240, 240))
     row_h = (h - 110) / len(items)
     for i, it in enumerate(items):
         y = 100 + i * row_h

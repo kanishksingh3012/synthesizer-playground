@@ -108,7 +108,7 @@ export default function App() {
     <div className="app">
       <header className="bar">
         <div className="brand">
-          PULSE-16 <b>BASIC</b>
+          HEX<b>-16</b>
         </div>
         <div className="actions">
           <Toggle checked={uiSound} onChange={(v) => toggle('uiSound', v)}>
