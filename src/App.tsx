@@ -6,6 +6,8 @@ import { beatFromHash } from './state/share';
 import { ExportDialog } from './ui/ExportDialog';
 import { ShareDialog } from './ui/ShareDialog';
 import { DesktopGate } from './ui/DesktopGate';
+import { StageErrorBoundary } from './ui/StageErrorBoundary';
+import { Tutorial } from './ui/Tutorial';
 
 // The 3D synth (three.js, model, audio engine) loads on demand, so gated phones never download it.
 const Stage = lazy(() => import('./scene/Stage').then((m) => ({ default: m.Stage })));
@@ -60,6 +62,14 @@ export default function App() {
   const showHelp = useStore((s) => s.showHelp);
   const uiSound = useStore((s) => s.uiSound);
   const audioReady = useStore((s) => s.audioReady);
+  const tutorialOpen = useStore((s) => s.tutorialOpen);
+  const [tutorialSeen, setTutorialSeen] = useState(() => {
+    try {
+      return localStorage.getItem('hex16.tutorialSeen') === '1';
+    } catch {
+      return true;
+    }
+  });
   const set = useStore((s) => s.set);
   const [dialog, setDialog] = useState<'export' | 'share' | null>(null);
   const small = useMedia(SMALL_SCREEN);
@@ -117,6 +127,24 @@ export default function App() {
           <Toggle checked={showKeys} onChange={(v) => toggle('showKeys', v)}>
             Key hints
           </Toggle>
+          <Button
+            variant={tutorialOpen ? 'secondary' : 'ghost'}
+            size="sm"
+            className={tutorialSeen ? undefined : 'is-new'}
+            onPress={() => {
+              set({ tutorialOpen: !tutorialOpen });
+              if (!tutorialSeen) {
+                setTutorialSeen(true);
+                try {
+                  localStorage.setItem('hex16.tutorialSeen', '1');
+                } catch {
+                  /* private mode */
+                }
+              }
+            }}
+          >
+            Tutorial
+          </Button>
           <Button variant="ghost" size="sm" onPress={() => set({ showHelp: true })}>
             Shortcuts
           </Button>
@@ -128,12 +156,17 @@ export default function App() {
           </Button>
         </div>
       </header>
-      <main className="stage">
-        <Suspense fallback={<div className="hint">Loading the synth…</div>}>
-          <Stage />
-        </Suspense>
-        {!audioReady && <div className="hint">Click any control or press a key to start sound</div>}
-      </main>
+      <div className="work">
+        <main className="stage">
+          <StageErrorBoundary>
+            <Suspense fallback={<div className="hint">Loading the synth…</div>}>
+              <Stage />
+            </Suspense>
+          </StageErrorBoundary>
+          {!audioReady && <div className="hint">Click any control or press a key to start sound</div>}
+        </main>
+        {tutorialOpen && <Tutorial onExport={() => setDialog('export')} onShare={() => setDialog('share')} />}
+      </div>
 
       <Modal isOpen={showHelp} onOpenChange={(open) => set({ showHelp: open })}>
         <Modal.Backdrop>

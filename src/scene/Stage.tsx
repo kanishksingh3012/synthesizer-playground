@@ -4,6 +4,7 @@ import { ContactShadows, Environment, useGLTF } from '@react-three/drei';
 import { Bloom, EffectComposer } from '@react-three/postprocessing';
 import { Box3, Vector3, type PerspectiveCamera } from 'three';
 import { Hex16, MODEL } from './Hex16';
+import { Highlights } from './Highlights';
 
 const TILT = (14 * Math.PI) / 180; // top view, tilted slightly toward the player
 const MARGIN_Y = 64; // px above and below the synth (the start hint sits in the bottom margin)
@@ -59,6 +60,7 @@ export function Stage() {
         <Environment files="/hdri/studio.exr" environmentIntensity={0.3} />
         <Hex16 />
         <TopCamera />
+        <Highlights />
       </Suspense>
       <ContactShadows position={[0, 0, 0]} opacity={0.45} scale={16} blur={2.6} far={2} />
       <TopCamera />

@@ -8,6 +8,10 @@ Browser synth playground: play a 3D synth (HEX-16), sequence a beat + melody, ex
 - `blender/` — procedural Blender (bpy 5.0) models + Cycles renders. `build_hex16.py` = the HEX-16 design. HDRIs in `blender/assets` are CC0 (via `@pmndrs/assets`).
 - `docs/design/` — current design renders.
 
+## Tutorial
+The **Tutorial** button in the top bar opens a 19-lesson beginner course next to the synth (5 parts: Meet HEX-16, Rhythm, Melody, Sound, Go further).
+Content and diagrams: `src/tutorial/lessons.tsx` + `src/tutorial/diagrams.tsx`; what counts as done and what "Show me" does: `src/tutorial/tasks.ts`; panel: `src/ui/Tutorial.tsx`; highlight rings on the synth: `src/scene/Highlights.tsx`.
+
 ## Run
 ```
 npm install && npm run dev
