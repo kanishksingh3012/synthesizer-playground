@@ -1,5 +1,5 @@
 import { DRUMS, STEPS, emptyNotes, useStore, type MacroKey, type Track } from './state/store';
-import { SOUNDS } from './audio/sounds';
+import { SOUNDS, detentsOf } from './audio/sounds';
 import { hitDrum, noteOff, noteOn, play, stop } from './audio/live';
 import { uiSound } from './audio/uiSounds';
 
@@ -10,8 +10,6 @@ const S = () => useStore.getState();
 const set = (p: Parameters<ReturnType<typeof S>['set']>[0]) => S().set(p);
 const flash = (id: string) => set({ flashes: { ...S().flashes, [id]: performance.now() } });
 
-/** Knobs have 41 click positions (0..40), like a real detented pot. */
-export const DETENTS = 40;
 
 export const keyNote = (i: number) => `${NOTE_NAMES[i % 12]}${S().keyOctave + Math.floor(i / 12)}`;
 
@@ -97,6 +95,7 @@ export function shiftOctave(d: -1 | 1) {
 
 export function setMacro(k: MacroKey, v: number) {
   const value = Math.min(1, Math.max(0, v));
-  if (Math.round(value * DETENTS) !== Math.round(S().macros[k] * DETENTS)) uiSound('tick'); // crossed a detent
+  const n = detentsOf(k);
+  if (Math.round(value * n) !== Math.round(S().macros[k] * n)) uiSound('tick'); // crossed a detent
   set({ macros: { ...S().macros, [k]: value }, popup: { label: k.toUpperCase(), value, until: performance.now() + 1000 } });
 }
