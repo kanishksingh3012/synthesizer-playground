@@ -1,39 +1,44 @@
-:root {
-  --bg: #d2d3d6;
-  --bar: #eceded;
-  --line: #c2c4c8;
-  --text: #1f2226;
+@import '@heroui/styles';
+
+/* PULSE-16 colour system mapped onto HeroUI tokens (light studio theme).
+   A dark version later only needs a second block like this under .dark. */
+:root,
+.light,
+[data-theme='light'] {
+  --accent: #ff6a2b; /* PULSE-16 orange: PLAY key, selected states */
+  --accent-foreground: #ffffff;
+  --background: #d2d3d6; /* studio floor behind the synth */
+  --foreground: #1f2226;
+  --surface: #eceded; /* header, dialogs */
+  --overlay: #f4f4f5;
   --muted: #62666d;
-  --accent: #ff6a2b;
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  color: var(--text);
-  background: var(--bg);
+  --border: #c2c4c8;
+  --separator: #cbcdd1;
+  --default: #e2e3e6;
+  --field-background: #ffffff;
+  --radius: 0.625rem;
 }
-* { box-sizing: border-box; }
-html, body, #root { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--background);
+  color: var(--foreground);
+}
 .app { height: 100%; display: flex; flex-direction: column; }
-.bar { height: 52px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: var(--bar); border-bottom: 1px solid var(--line); }
-.brand { letter-spacing: .18em; font-weight: 600; }
+.bar { height: 56px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.brand { letter-spacing: .18em; font-weight: 600; white-space: nowrap; }
 .brand b { color: var(--accent); font-weight: 700; }
-.actions { display: flex; gap: 8px; }
-button { font: inherit; font-size: 14px; color: var(--text); background: #f7f7f8; border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
-button:hover { border-color: var(--muted); }
-button[aria-pressed='true'] { border-color: var(--accent); }
+.actions { display: flex; align-items: center; gap: 12px; }
 .stage { position: relative; flex: 1; min-height: 0; }
-.hint { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); padding: 8px 14px; border-radius: 999px; background: rgba(255,255,255,.85); color: var(--muted); font-size: 14px; pointer-events: none; white-space: nowrap; }
-.overlay { position: fixed; inset: 0; background: rgba(30,32,36,.45); display: grid; place-items: center; padding: 16px; }
-.help { width: min(460px, 100%); background: var(--bar); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
-.help h2 { margin: 0 0 12px; font-size: 18px; }
-.help dl { margin: 0 0 16px; display: grid; gap: 8px; }
-.help dl div { display: flex; justify-content: space-between; gap: 16px; }
-.help dt { font-family: ui-monospace, monospace; color: var(--accent); }
-.help dd { margin: 0; color: var(--muted); text-align: right; }
-button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-button:disabled { opacity: .5; cursor: default; }
-.help fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 0 0 12px; padding: 8px 12px; display: grid; gap: 6px; }
-.help legend { color: var(--muted); font-size: 13px; padding: 0 4px; }
-.help label { display: flex; gap: 8px; align-items: center; font-size: 14px; cursor: pointer; }
-.help .check { margin: 0 0 12px; }
-.help progress { width: 100%; margin: 0 0 12px; accent-color: var(--accent); }
-.help .error { color: #c0392b; margin: 0 0 12px; font-size: 14px; }
-.help .row { display: flex; justify-content: flex-end; gap: 8px; }
+.hint { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); padding: 8px 14px; border-radius: 999px; background: color-mix(in oklab, var(--surface) 85%, transparent); color: var(--muted); font-size: 14px; pointer-events: none; white-space: nowrap; }
+.shortcuts { display: grid; gap: 10px; margin: 0; }
+.shortcuts div { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.shortcuts dd { margin: 0; color: var(--muted); text-align: right; font-size: 14px; }
+.shortcuts dt { display: flex; flex-wrap: wrap; gap: 4px; }
+.field-group { display: grid; gap: 8px; margin-bottom: 16px; }
+[data-slot='modal-heading'] { font-weight: 600; font-size: 1.125rem; }
+.field-group > [data-slot='label'] { font-weight: 600; font-size: .8125rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
