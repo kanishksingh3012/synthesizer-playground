@@ -1,4 +1,4 @@
-"""Concept 2 — Rhythm Composer ("PULSE-16"): beat-first drum-machine layout."""
+"""Concept 2 — Rhythm Composer (the concept that became HEX-16): beat-first drum-machine layout."""
 import math
 import os
 import sys
@@ -64,7 +64,7 @@ def build():
     c.box('keybed_well', (8.4, 1.38, 0.02), (0, -1.98, 0.5), m['strip'], bev=0.01)
 
     # wordmark row
-    c.text('PULSE-16', (-4.0, 2.36, TOP + 0.001), 0.26, m['ink'], align='LEFT', spacing=1.2)
+    c.text('HEX-16', (-4.0, 2.36, TOP + 0.001), 0.26, m['ink'], align='LEFT', spacing=1.2)
     c.text('RHYTHM COMPOSER', (-2.3, 2.34, TOP + 0.001), 0.1, m['ink_r'], align='LEFT', spacing=1.5)
     c.text('PLAYGROUND ELECTRONICS', (4.0, 2.34, TOP + 0.001), 0.09, m['ink'], align='RIGHT', spacing=1.5)
     c.box('rule', (8.0, 0.012, 0.002), (0, 2.14, TOP), m['ink'], bev=0)

@@ -63,7 +63,7 @@ export default function App() {
   const set = useStore((s) => s.set);
   const [dialog, setDialog] = useState<'export' | 'share' | null>(null);
   const small = useMedia(SMALL_SCREEN);
-  const [tryAnyway, setTryAnyway] = useState(() => session('pulse16.tryAnyway'));
+  const [tryAnyway, setTryAnyway] = useState(() => session('hex16.tryAnyway'));
   const gated = small && !tryAnyway;
 
   useEffect(() => (gated ? undefined : installKeyboard()), [gated]);
@@ -81,7 +81,7 @@ export default function App() {
   const toggle = (key: 'showKeys' | 'uiSound', value: boolean) => {
     set({ [key]: value });
     try {
-      localStorage.setItem(`pulse16.${key}`, value ? '1' : '0');
+      localStorage.setItem(`hex16.${key}`, value ? '1' : '0');
     } catch {
       /* private mode: preference just isn't remembered */
     }
@@ -94,7 +94,7 @@ export default function App() {
           onTryAnyway={() => {
             setTryAnyway(true);
             try {
-              sessionStorage.setItem('pulse16.tryAnyway', '1');
+              sessionStorage.setItem('hex16.tryAnyway', '1');
             } catch {
               /* fine: they'll just see the gate again next visit */
             }

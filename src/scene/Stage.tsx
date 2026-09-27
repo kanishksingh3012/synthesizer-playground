@@ -3,7 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { ContactShadows, Environment } from '@react-three/drei';
 import { Bloom, EffectComposer } from '@react-three/postprocessing';
 import type { PerspectiveCamera } from 'three';
-import { Pulse16 } from './Pulse16';
+import { Hex16 } from './Hex16';
 
 const TARGET: [number, number, number] = [0, 0.4, 0];
 const TILT = (14 * Math.PI) / 180; // top view, tilted slightly toward the player
@@ -31,7 +31,7 @@ export function Stage() {
       <directionalLight position={[-3, 10, 6]} intensity={0.5} />
       <Suspense fallback={null}>
         <Environment files="/hdri/studio.exr" environmentIntensity={0.3} />
-        <Pulse16 />
+        <Hex16 />
       </Suspense>
       <ContactShadows position={[0, 0, 0]} opacity={0.45} scale={16} blur={2.6} far={2} />
       <TopCamera />
