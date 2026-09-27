@@ -31,14 +31,15 @@ export interface PlaygroundState {
   flashes: Record<string, number>; // control name -> last press time (keyboard-triggered press animation)
   popup: { label: string; value: number; until: number } | null;
   showKeys: boolean;
+  uiSound: boolean; // mechanical click sounds on/off
   showHelp: boolean;
   audioReady: boolean;
   set: (partial: Partial<PlaygroundState>) => void;
 }
 
-const storedShowKeys = () => {
+const storedFlag = (key: string) => {
   try {
-    return localStorage.getItem('pulse16.showKeys') !== '0';
+    return localStorage.getItem(key) !== '0';
   } catch {
     return true;
   }
@@ -59,7 +60,8 @@ export const useStore = create<PlaygroundState>((set) => ({
   padHits: { kick: 0, snare: 0, hat: 0, clap: 0, tom: 0, perc: 0 },
   flashes: {},
   popup: null,
-  showKeys: storedShowKeys(),
+  showKeys: storedFlag('pulse16.showKeys'),
+  uiSound: storedFlag('pulse16.uiSound'),
   showHelp: false,
   audioReady: false,
   set: (partial) => set(partial),

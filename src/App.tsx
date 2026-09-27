@@ -18,13 +18,14 @@ export default function App() {
   const showKeys = useStore((s) => s.showKeys);
   const showHelp = useStore((s) => s.showHelp);
   const audioReady = useStore((s) => s.audioReady);
+  const uiSound = useStore((s) => s.uiSound);
   const set = useStore((s) => s.set);
   useEffect(() => installKeyboard(), []);
 
-  const toggleKeys = () => {
-    set({ showKeys: !showKeys });
+  const toggle = (key: 'showKeys' | 'uiSound', value: boolean) => {
+    set({ [key]: !value });
     try {
-      localStorage.setItem('pulse16.showKeys', showKeys ? '0' : '1');
+      localStorage.setItem(`pulse16.${key}`, value ? '0' : '1');
     } catch {
       /* private mode: preference just isn't remembered */
     }
@@ -37,7 +38,10 @@ export default function App() {
           PULSE-16 <b>BASIC</b>
         </div>
         <div className="actions">
-          <button onClick={toggleKeys} aria-pressed={showKeys}>
+          <button onClick={() => toggle('uiSound', uiSound)} aria-pressed={uiSound}>
+            Click sounds {uiSound ? 'on' : 'off'}
+          </button>
+          <button onClick={() => toggle('showKeys', showKeys)} aria-pressed={showKeys}>
             {showKeys ? 'Hide' : 'Show'} keys
           </button>
           <button onClick={() => set({ showHelp: !showHelp })}>? Shortcuts</button>
