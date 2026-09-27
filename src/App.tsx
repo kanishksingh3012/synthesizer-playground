@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Stage } from './scene/Stage';
 import { installKeyboard } from './input/keyboard';
 import { useStore } from './state/store';
+import { ExportDialog } from './ui/ExportDialog';
 
 const SHORTCUTS: [string, string][] = [
   ['A W S E D F T G Y H U J K', 'play notes'],
@@ -20,6 +21,7 @@ export default function App() {
   const audioReady = useStore((s) => s.audioReady);
   const uiSound = useStore((s) => s.uiSound);
   const set = useStore((s) => s.set);
+  const [exporting, setExporting] = useState(false);
   useEffect(() => installKeyboard(), []);
 
   const toggle = (key: 'showKeys' | 'uiSound', value: boolean) => {
@@ -45,6 +47,9 @@ export default function App() {
             {showKeys ? 'Hide' : 'Show'} keys
           </button>
           <button onClick={() => set({ showHelp: !showHelp })}>? Shortcuts</button>
+          <button className="primary" onClick={() => setExporting(true)}>
+            Export
+          </button>
         </div>
       </header>
       <main className="stage">
@@ -53,7 +58,7 @@ export default function App() {
       </main>
       {showHelp && (
         <div className="overlay" onClick={() => set({ showHelp: false })}>
-          <div className="help" onClick={(e) => e.stopPropagation()}>
+          <div className="help" role="dialog" aria-label="Keyboard shortcuts" onClick={(e) => e.stopPropagation()}>
             <h2>Keyboard shortcuts</h2>
             <dl>
               {SHORTCUTS.map(([k, v]) => (
@@ -67,6 +72,7 @@ export default function App() {
           </div>
         </div>
       )}
+      {exporting && <ExportDialog onClose={() => setExporting(false)} />}
     </div>
   );
 }

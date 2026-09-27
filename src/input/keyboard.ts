@@ -12,6 +12,7 @@ export function installKeyboard(): () => void {
 
   const down = (e: KeyboardEvent) => {
     if (typing(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (document.querySelector('[role=dialog]')) return; // dialogs own the keyboard (Space/Enter on their buttons)
     if (e.key === '?') {
       useStore.getState().set({ showHelp: !useStore.getState().showHelp });
       return;
